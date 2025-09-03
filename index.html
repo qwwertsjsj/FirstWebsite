@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录页面</title>
+  <style>
+    /* 统一盒模型，防止输入框溢出 */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: white;
+      font-family: Arial, sans-serif;
+      animation: fadeIn 1.2s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .login-box {
+      width: 300px;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      background: #fff;
+      animation: fadeIn 1.5s ease;
+    }
+    .login-box h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .login-box input {
+      width: 100%; /* 在 border-box 下不会溢出 */
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    .login-box button {
+      width: 100%;
+      padding: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .login-box button:hover {
+      background-color: #45a049;
+      transform: translateY(-1px) scale(1.03);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .captcha {
+      display: flex;
+      flex-direction: column;
+      align-items: center; /* 按钮和验证码文本居中 */
+      margin: 10px 0;
+      gap: 6px;
+    }
+    .captcha span {
+      font-weight: bold;
+      font-size: 16px;
+      user-select: none;
+    }
+    .captcha button {
+      width: auto;
+      padding: 5px 10px;
+      font-size: 12px;
+      background-color: #007BFF;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+    .captcha button:hover {
+      background-color: #0056b3;
+      transform: translateY(-1px) scale(1.05);
+    }
+    .error {
+      color: #d93025;
+      font-size: 12px;
+      min-height: 16px; /* 占位，避免布局抖动 */
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h2>用户登录</h2>
+    <form id="loginForm" novalidate>
+      <input type="text" id="username" placeholder="用户名" required>
+      <input type="password" id="password" placeholder="密码" required>
+
+      <div class="captcha">
+        <span id="captchaText"></span>
+        <button type="button" id="refreshBtn">换一个</button>
+      </div>
+      <input type="text" id="captchaInput" placeholder="请输入上方验证码" autocomplete="off" required>
+      <div id="captchaError" class="error" aria-live="polite"></div>
+
+      <button type="submit">登录/注册</button>
+    </form>
+  </div>
+
+  <script>
+    const captchaSpan = document.getElementById('captchaText');
+    const captchaInput = document.getElementById('captchaInput');
+    const captchaError = document.getElementById('captchaError');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const form = document.getElementById('loginForm');
+
+    function generateCaptcha() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let captcha = '';
+      for (let i = 0; i < 4; i++) {
+        captcha += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      captchaSpan.textContent = captcha; // 避免多余空白
+    }
+
+    function validateCaptcha() {
+      const expect = (captchaSpan.textContent || '').replace(/\s/g, '').toUpperCase();
+      const got = (captchaInput.value || '').replace(/\s/g, '').toUpperCase();
+      return expect && got && expect === got;
+    }
+
+    // 提交事件：显式阻止默认提交，确保提示能够弹出
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (!validateCaptcha()) {
+        captchaError.textContent = '验证码错误，请重试！';
+        alert('验证码错误，请重试！');
+        generateCaptcha();
+        captchaInput.value = '';
+        captchaInput.focus();
+        return;
+      }
+      captchaError.textContent = '';
+      alert('登录成功！');
+      window.location.href = 'https://www.baidu.com';
+    });
+
+    refreshBtn.addEventListener('click', function () {
+      generateCaptcha();
+      captchaError.textContent = '';
+      captchaInput.value = '';
+      captchaInput.focus();
+    });
+
+    // 初始化
+    generateCaptcha();
+  </script>
+</body>
+</html>
