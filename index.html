@@ -1,161 +1,1673 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>登录页面</title>
-  <style>
-    /* 统一盒模型，防止输入框溢出 */
-    *, *::before, *::after { box-sizing: border-box; }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Roblox Script Hub | 优质脚本中转站</title>
+    <style>
+        /* ===== 全局重置 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-color: white;
-      font-family: Arial, sans-serif;
-      animation: fadeIn 1.2s ease;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .login-box {
-      width: 300px;
-      padding: 20px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      background: #fff;
-      animation: fadeIn 1.5s ease;
-    }
-    .login-box h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .login-box input {
-      width: 100%; /* 在 border-box 下不会溢出 */
-      padding: 10px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 14px;
-    }
-    .login-box button {
-      width: 100%;
-      padding: 10px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-    .login-box button:hover {
-      background-color: #45a049;
-      transform: translateY(-1px) scale(1.03);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-    .captcha {
-      display: flex;
-      flex-direction: column;
-      align-items: center; /* 按钮和验证码文本居中 */
-      margin: 10px 0;
-      gap: 6px;
-    }
-    .captcha span {
-      font-weight: bold;
-      font-size: 16px;
-      user-select: none;
-    }
-    .captcha button {
-      width: auto;
-      padding: 5px 10px;
-      font-size: 12px;
-      background-color: #007BFF;
-      border-radius: 4px;
-      transition: all 0.3s ease;
-    }
-    .captcha button:hover {
-      background-color: #0056b3;
-      transform: translateY(-1px) scale(1.05);
-    }
-    .error {
-      color: #d93025;
-      font-size: 12px;
-      min-height: 16px; /* 占位，避免布局抖动 */
-      margin-top: 2px;
-    }
-  </style>
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: #000000;
+            color: #e0e0e0;
+            font-family: 'Inter', -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            overflow-x: hidden;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* ===== 动态粒子画布（白色粒子） ===== */
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ===== 通用容器 ===== */
+        .container {
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 0 40px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* ===== Header ===== */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 50px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            z-index: 999;
+            transition: .3s;
+        }
+
+        header.scrolled {
+            background: rgba(0, 0, 0, 0.96);
+            box-shadow: 0 4px 40px rgba(0, 0, 0, 0.8);
+        }
+
+        .logo {
+            font-size: 26px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo span {
+            font-size: 20px;
+            color: #666;
+            opacity: .6;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: rgba(255, 255, 255, 0.55);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: .25s;
+            letter-spacing: .2px;
+        }
+
+        nav a:hover,
+        nav a.active {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .lang-btn {
+            padding: 8px 18px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            background: transparent;
+            color: #b0b0b0;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: .3s;
+            backdrop-filter: blur(4px);
+        }
+
+        .lang-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.30);
+            color: #fff;
+        }
+
+        /* ===== Hero ===== */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 120px 20px 80px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 6px 22px;
+            border-radius: 100px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            color: #aaa;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: .5px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(4px);
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            font-size: 74px;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 16px;
+            color: #ffffff;
+            letter-spacing: -2px;
+        }
+
+        .hero h2 {
+            font-size: 28px;
+            font-weight: 400;
+            color: #999;
+            margin-bottom: 18px;
+            letter-spacing: .3px;
+        }
+
+        .hero p {
+            font-size: 20px;
+            max-width: 680px;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.9;
+        }
+
+        .hero .buttons {
+            margin-top: 40px;
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 16px 38px;
+            border-radius: 14px;
+            text-decoration: none;
+            font-size: 17px;
+            font-weight: 600;
+            transition: .35s cubic-bezier(.25, .46, .45, .94);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: #ffffff;
+            color: #000000;
+            box-shadow: 0 4px 24px rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 44px rgba(255, 255, 255, 0.25);
+            background: #f0f0f0;
+        }
+
+        .btn-secondary {
+            border: 2px solid rgba(255, 255, 255, 0.20);
+            color: #ccc;
+            background: transparent;
+            backdrop-filter: blur(4px);
+        }
+
+        .btn-secondary:hover {
+            border-color: rgba(255, 255, 255, 0.50);
+            background: rgba(255, 255, 255, 0.04);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* ===== 统计 ===== */
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 70px;
+            padding: 50px 20px 70px;
+            flex-wrap: wrap;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, 0.01);
+            position: relative;
+            z-index: 2;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat h2 {
+            font-size: 52px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -1px;
+        }
+
+        .stat p {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.30);
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        /* ===== 通用板块标题 ===== */
+        .section-title {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .section-title h2 {
+            font-size: 40px;
+            font-weight: 700;
+            letter-spacing: -1px;
+            color: #ffffff;
+        }
+
+        .section-title p {
+            color: rgba(255, 255, 255, 0.35);
+            font-size: 18px;
+            margin-top: 10px;
+            max-width: 560px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* ===== 脚本卡片 ===== */
+        .scripts-section {
+            padding: 80px 0 60px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .scripts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 28px;
+        }
+
+        .script-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            padding: 30px 28px;
+            backdrop-filter: blur(10px);
+            transition: .4s cubic-bezier(.25, .46, .45, .94);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .script-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #ffffff;
+            opacity: 0;
+            transition: .4s;
+        }
+
+        .script-card:hover {
+            transform: translateY(-8px);
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.8);
+        }
+
+        .script-card:hover::before {
+            opacity: 1;
+        }
+
+        .script-card .icon {
+            font-size: 32px;
+            margin-bottom: 14px;
+            display: inline-block;
+        }
+
+        .script-card h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .script-card p {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 15px;
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+
+        .script-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .script-tags span {
+            padding: 2px 14px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .3px;
+            text-transform: uppercase;
+            background: rgba(255, 255, 255, 0.06);
+            color: #aaa;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .script-tags .hot {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .script-tags .new {
+            background: rgba(255, 255, 255, 0.08);
+            color: #ccc;
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .script-tags .stable {
+            background: rgba(255, 255, 255, 0.06);
+            color: #aaa;
+            border-color: rgba(255, 255, 255, 0.06);
+        }
+
+        .script-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.30);
+        }
+
+        .script-meta .downloads {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .script-meta .downloads strong {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        /* ===== 执行器 ===== */
+        .executors-section {
+            padding: 60px 0 80px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .executors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 24px;
+        }
+
+        .executor-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 18px;
+            padding: 28px 24px;
+            text-align: center;
+            transition: .35s;
+            backdrop-filter: blur(6px);
+        }
+
+        .executor-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .executor-card .icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .executor-card h4 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .executor-card p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.4);
+            margin: 6px 0 12px;
+        }
+
+        .executor-card .badge {
+            display: inline-block;
+            padding: 3px 14px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.06);
+            color: #aaa;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        /* ===== 使用指南 ===== */
+        .guide-section {
+            padding: 70px 0 80px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .guide-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 30px;
+            counter-reset: step;
+        }
+
+        .guide-step {
+            text-align: center;
+            padding: 30px 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            transition: .3s;
+            counter-increment: step;
+        }
+
+        .guide-step:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.10);
+        }
+
+        .guide-step .num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #ffffff;
+            color: #000000;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .guide-step h4 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .guide-step p {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.4);
+            line-height: 1.7;
+        }
+
+        /* ===== 最新动态 ===== */
+        .updates-section {
+            padding: 60px 0 80px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .timeline {
+            max-width: 720px;
+            margin: 0 auto;
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 8px;
+            bottom: 8px;
+            width: 2px;
+            background: rgba(255, 255, 255, 0.20);
+            opacity: 0.3;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding: 0 0 32px 28px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -22px;
+            top: 8px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px solid #000000;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15);
+        }
+
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .timeline-item .date {
+            font-size: 13px;
+            font-weight: 500;
+            color: #aaa;
+            letter-spacing: .3px;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .timeline-item h4 {
+            font-size: 17px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .timeline-item p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 2px;
+        }
+
+        /* ===== FAQ ===== */
+        .faq-section {
+            padding: 60px 0 80px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .faq-list {
+            max-width: 820px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .faq-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: .3s;
+        }
+
+        .faq-item:hover {
+            border-color: rgba(255, 255, 255, 0.10);
+        }
+
+        .faq-item summary {
+            padding: 20px 28px;
+            font-size: 17px;
+            font-weight: 500;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            list-style: none;
+            transition: .25s;
+            user-select: none;
+        }
+
+        .faq-item summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .faq-item summary::after {
+            content: '+';
+            font-size: 24px;
+            color: #aaa;
+            transition: .3s;
+            font-weight: 300;
+        }
+
+        .faq-item[open] summary::after {
+            content: '−';
+            transform: rotate(0deg);
+        }
+
+        .faq-item summary:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .faq-item .faq-answer {
+            padding: 0 28px 24px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 15px;
+            line-height: 1.8;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            padding-top: 16px;
+        }
+
+        /* ===== CTA ===== */
+        .cta-section {
+            padding: 60px 0 80px;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .cta-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 28px;
+            padding: 50px 40px;
+            backdrop-filter: blur(10px);
+            max-width: 780px;
+            margin: 0 auto;
+        }
+
+        .cta-box h2 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #ffffff;
+        }
+
+        .cta-box p {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 18px;
+            margin-bottom: 28px;
+        }
+
+        .cta-box .btn-group {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* ===== Footer ===== */
+        footer {
+            padding: 50px 40px 30px;
+            background: #000000;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            position: relative;
+            z-index: 2;
+        }
+
+        .footer-grid {
+            max-width: 1240px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .footer-brand .logo {
+            font-size: 24px;
+            margin-bottom: 12px;
+            display: inline-block;
+            color: #fff;
+        }
+
+        .footer-brand p {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 14px;
+            max-width: 300px;
+            line-height: 1.8;
+        }
+
+        .footer-col h5 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 16px;
+            letter-spacing: .5px;
+        }
+
+        .footer-col a {
+            display: block;
+            color: rgba(255, 255, 255, 0.3);
+            text-decoration: none;
+            font-size: 14px;
+            padding: 4px 0;
+            transition: .25s;
+            cursor: pointer;
+        }
+
+        .footer-col a:hover {
+            color: #fff;
+        }
+
+        .footer-bottom {
+            max-width: 1240px;
+            margin: 20px auto 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding-top: 20px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.15);
+        }
+
+        .footer-bottom .social {
+            display: flex;
+            gap: 18px;
+        }
+
+        .footer-bottom .social a {
+            color: rgba(255, 255, 255, 0.15);
+            text-decoration: none;
+            transition: .3s;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .footer-bottom .social a:hover {
+            color: #fff;
+        }
+
+        .copy-btn {
+            cursor: pointer;
+            transition: .3s;
+        }
+
+        .copy-btn:hover {
+            color: #fff;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 1024px) {
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 30px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            header {
+                padding: 14px 20px;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            nav {
+                order: 3;
+                width: 100%;
+                justify-content: center;
+                gap: 4px;
+            }
+
+            nav a {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+
+            .header-actions {
+                margin-left: auto;
+            }
+
+            .hero h1 {
+                font-size: 44px;
+            }
+
+            .hero h2 {
+                font-size: 22px;
+            }
+
+            .hero p {
+                font-size: 17px;
+            }
+
+            .section-title h2 {
+                font-size: 30px;
+            }
+
+            .stats {
+                gap: 30px;
+                padding: 40px 20px;
+            }
+
+            .stat h2 {
+                font-size: 38px;
+            }
+
+            .container {
+                padding: 0 20px;
+            }
+
+            .scripts-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .executors-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .guide-steps {
+                grid-template-columns: 1fr;
+                max-width: 400px;
+                margin: 0 auto;
+            }
+
+            .cta-box {
+                padding: 36px 24px;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .hero h2 {
+                font-size: 18px;
+            }
+
+            .scripts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .executors-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .btn {
+                padding: 14px 28px;
+                font-size: 15px;
+            }
+
+            .timeline {
+                padding-left: 20px;
+            }
+
+            .timeline-item {
+                padding-left: 20px;
+            }
+
+            .timeline-item::before {
+                left: -16px;
+                width: 10px;
+                height: 10px;
+            }
+
+            .faq-item summary {
+                padding: 16px 20px;
+                font-size: 15px;
+            }
+
+            .faq-item .faq-answer {
+                padding: 0 20px 18px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .executors-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
+
 <body>
-  <div class="login-box">
-    <h2>用户登录</h2>
-    <form id="loginForm" novalidate>
-      <input type="text" id="username" placeholder="用户名" required>
-      <input type="password" id="password" placeholder="密码" required>
 
-      <div class="captcha">
-        <span id="captchaText"></span>
-        <button type="button" id="refreshBtn">换一个</button>
-      </div>
-      <input type="text" id="captchaInput" placeholder="请输入上方验证码" autocomplete="off" required>
-      <div id="captchaError" class="error" aria-live="polite"></div>
+    <!-- ===== 动态粒子画布 ===== -->
+    <canvas id="particles-canvas"></canvas>
 
-      <button type="submit">登录/注册</button>
-    </form>
-  </div>
+    <!-- ===== HEADER ===== -->
+    <header id="header">
+        <div class="logo">
+            🚀 Roblox Script Hub
+            <span>|</span>
+        </div>
 
-  <script>
-    const captchaSpan = document.getElementById('captchaText');
-    const captchaInput = document.getElementById('captchaInput');
-    const captchaError = document.getElementById('captchaError');
-    const refreshBtn = document.getElementById('refreshBtn');
-    const form = document.getElementById('loginForm');
+        <nav>
+            <a href="#" class="active" data-key="nav-home">首页</a>
+            <!-- 关键修改：导航标签改为“支持的游戏” -->
+            <a href="#scripts" data-key="nav-games">支持的游戏</a>
+            <a href="#executors" data-key="nav-executors">执行器</a>
+            <a href="#guide" data-key="nav-guide">指南</a>
+            <a href="#faq" data-key="nav-faq">FAQ</a>
+        </nav>
 
-    function generateCaptcha() {
-      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-      let captcha = '';
-      for (let i = 0; i < 4; i++) {
-        captcha += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      captchaSpan.textContent = captcha; // 避免多余空白
-    }
+        <div class="header-actions">
+            <button class="lang-btn" id="langToggle" onclick="toggleLang()">🌐 中文 / EN</button>
+        </div>
+    </header>
 
-    function validateCaptcha() {
-      const expect = (captchaSpan.textContent || '').replace(/\s/g, '').toUpperCase();
-      const got = (captchaInput.value || '').replace(/\s/g, '').toUpperCase();
-      return expect && got && expect === got;
-    }
+    <!-- ===== HERO ===== -->
+    <section class="hero">
+        <div class="hero-badge" data-key="hero-badge">✦ 持续更新 · 社区驱动</div>
+        <h1 id="hero-title" data-key="hero-title">Roblox 优质脚本中转站</h1>
+        <h2 id="hero-sub" data-key="hero-sub">The Best Roblox Script Hub</h2>
+        <p id="hero-desc" data-key="hero-desc">收录高质量 Roblox 脚本、执行器资讯与资源导航，持续更新，为玩家提供稳定可靠的脚本资源。</p>
+        <div class="buttons">
+            <a href="#scripts" class="btn btn-primary" data-key="hero-btn1">📜 浏览脚本</a>
+            <a class="btn btn-secondary copy-btn" onclick="copyQQ()" data-key="hero-btn2">💬 QQ群：1047623664</a>
+        </div>
+    </section>
 
-    // 提交事件：显式阻止默认提交，确保提示能够弹出
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      if (!validateCaptcha()) {
-        captchaError.textContent = '验证码错误，请重试！';
-        alert('验证码错误，请重试！');
-        generateCaptcha();
-        captchaInput.value = '';
-        captchaInput.focus();
-        return;
-      }
-      captchaError.textContent = '';
-      alert('登录成功！');
-      window.location.href = 'https://www.baidu.com';
-    });
+    <!-- ===== STATS ===== -->
+    <div class="stats">
+        <div class="stat">
+            <h2>280+</h2>
+            <p data-key="stat-scripts">精选脚本</p>
+        </div>
+        <div class="stat">
+            <h2>65K+</h2>
+            <p data-key="stat-users">社区用户</p>
+        </div>
+        <div class="stat">
+            <h2>24/7</h2>
+            <p data-key="stat-update">持续更新</p>
+        </div>
+        <div class="stat">
+            <h2>4.9</h2>
+            <p data-key="stat-rating">用户评分</p>
+        </div>
+    </div>
 
-    refreshBtn.addEventListener('click', function () {
-      generateCaptcha();
-      captchaError.textContent = '';
-      captchaInput.value = '';
-      captchaInput.focus();
-    });
+    <!-- ===== 脚本卡片（内容仍为脚本） ===== -->
+    <section class="scripts-section" id="scripts">
+        <div class="container">
+            <div class="section-title">
+                <h2 data-key="scripts-title">🔥 热门脚本推荐</h2>
+                <p data-key="scripts-desc">精选社区最受欢迎、稳定可靠的 Roblox 脚本，持续更新中。</p>
+            </div>
 
-    // 初始化
-    generateCaptcha();
-  </script>
+            <div class="scripts-grid">
+                <!-- 1 -->
+                <div class="script-card">
+                    <div class="icon">⚡</div>
+                    <h3 data-key="script1-name">自动农场</h3>
+                    <p data-key="script1-desc">全自动收集资源、经验与货币，支持多种主流 Roblox 游戏。</p>
+                    <div class="script-tags">
+                        <span class="hot">🔥 热门</span>
+                        <span class="stable">✅ 稳定</span>
+                    </div>
+                    <div class="script-meta">
+                        <span class="downloads">⬇ <strong>12.4k</strong> 次</span>
+                        <span>v2.6.1</span>
+                    </div>
+                </div>
+
+                <!-- 2 -->
+                <div class="script-card">
+                    <div class="icon">🕊️</div>
+                    <h3 data-key="script2-name">飞行脚本</h3>
+                    <p data-key="script2-desc">自由飞行模式，速度可调，支持穿墙与视角锁定，操作丝滑。</p>
+                    <div class="script-tags">
+                        <span class="hot">🔥 热门</span>
+                        <span class="new">✨ 新</span>
+                    </div>
+                    <div class="script-meta">
+                        <span class="downloads">⬇ <strong>8.7k</strong> 次</span>
+                        <span>v3.0.2</span>
+                    </div>
+                </div>
+
+                <!-- 3 -->
+                <div class="script-card">
+                    <div class="icon">👁️</div>
+                    <h3 data-key="script3-name">透视 ESP</h3>
+                    <p data-key="script3-desc">显示玩家、物品和敌人位置，支持自定义颜色与距离过滤。</p>
+                    <div class="script-tags">
+                        <span class="stable">✅ 稳定</span>
+                    </div>
+                    <div class="script-meta">
+                        <span class="downloads">⬇ <strong>6.2k</strong> 次</span>
+                        <span>v4.1.0</span>
+                    </div>
+                </div>
+
+                <!-- 4 -->
+                <div class="script-card">
+                    <div class="icon">🎯</div>
+                    <h3 data-key="script4-name">自动瞄准</h3>
+                    <p data-key="script4-desc">智能锁定目标，精准追踪，支持平滑瞄准与自定义灵敏度。</p>
+                    <div class="script-tags">
+                        <span class="new">✨ 新</span>
+                    </div>
+                    <div class="script-meta">
+                        <span class="downloads">⬇ <strong>4.9k</strong> 次</span>
+                        <span>v1.4.3</span>
+                    </div>
+                </div>
+
+                <!-- 5 -->
+                <div class="script-card">
+                    <div class="icon">🦘</div>
+                    <h3 data-key="script5-name">无限跳跃</h3>
+                    <p data-key="script5-desc">突破跳跃限制，实现无限连跳，搭配速度调节，移动更灵活。</p>
+                    <div class="script-tags">
+                        <span class="stable">✅ 稳定</span>
+                    </div>
+                    <div class="script-meta">
+                        <span class="downloads">⬇ <strong>9.1k</strong> 次</span>
+                        <span>v2.2.0</span>
+                    </div>
+                </div>
+
+                <!-- 6 -->
+                <div class="script-card">
+                    <div class="icon">🚀</div>
+                    <h3 data-key="script6-name">速度修改</h3>
+                    <p data-key="script6-desc">自定义移动速度与跑步速度，支持滑块实时调节，简单易用。</p>
+                    <div class="script-tags">
+                        <span class="hot">🔥 热门</span>
+                        <span class="stable">✅ 稳定</span>
+                    </div>
+                    <div class="script-meta">
+                        <span class="downloads">⬇ <strong>7.8k</strong> 次</span>
+                        <span>v3.1.4</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 执行器推荐 ===== -->
+    <section class="executors-section" id="executors">
+        <div class="container">
+            <div class="section-title">
+                <h2 data-key="executors-title">⚙️ 推荐执行器</h2>
+                <p data-key="executors-desc">安全、稳定、高效的 Roblox 执行器，助你流畅运行脚本。</p>
+            </div>
+
+            <div class="executors-grid">
+                <div class="executor-card">
+                    <span class="icon">🧬</span>
+                    <h4>Synapse X</h4>
+                    <p data-key="exec1-desc">行业标杆，功能强大，兼容性极佳</p>
+                    <span class="badge">⭐ 推荐</span>
+                </div>
+                <div class="executor-card">
+                    <span class="icon">⚡</span>
+                    <h4>Krnl</h4>
+                    <p data-key="exec2-desc">免费稳定，社区活跃，入门首选</p>
+                    <span class="badge">🆓 免费</span>
+                </div>
+                <div class="executor-card">
+                    <span class="icon">🎨</span>
+                    <h4>Script-Ware</h4>
+                    <p data-key="exec3-desc">界面优雅，功能全面，体验流畅</p>
+                    <span class="badge">✨ 精致</span>
+                </div>
+                <div class="executor-card">
+                    <span class="icon">💨</span>
+                    <h4>Fluxus</h4>
+                    <p data-key="exec4-desc">轻量快速，资源占用低，稳定运行</p>
+                    <span class="badge">🚀 轻量</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 使用指南 ===== -->
+    <section class="guide-section" id="guide">
+        <div class="container">
+            <div class="section-title">
+                <h2 data-key="guide-title">📖 快速上手</h2>
+                <p data-key="guide-desc">三步轻松开始你的 Roblox 脚本之旅。</p>
+            </div>
+
+            <div class="guide-steps">
+                <div class="guide-step">
+                    <div class="num">1</div>
+                    <h4 data-key="guide-step1-title">选择脚本</h4>
+                    <p data-key="guide-step1-desc">浏览我们的脚本库，找到适合你游戏需求的脚本。</p>
+                </div>
+                <div class="guide-step">
+                    <div class="num">2</div>
+                    <h4 data-key="guide-step2-title">复制代码</h4>
+                    <p data-key="guide-step2-desc">一键复制脚本代码，或从 GitHub 获取最新版本。</p>
+                </div>
+                <div class="guide-step">
+                    <div class="num">3</div>
+                    <h4 data-key="guide-step3-title">注入执行</h4>
+                    <p data-key="guide-step3-desc">使用推荐执行器注入脚本，享受增强的游戏体验。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 最新动态 ===== -->
+    <section class="updates-section" id="updates">
+        <div class="container">
+            <div class="section-title">
+                <h2 data-key="updates-title">📰 最新动态</h2>
+                <p data-key="updates-desc">持续跟进脚本更新与社区资讯。</p>
+            </div>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <span class="date">2026-07-05</span>
+                    <h4 data-key="update1-title">🚀 新增 6 款热门脚本</h4>
+                    <p data-key="update1-desc">自动农场、飞行脚本、透视 ESP 等全新上线，均已通过稳定性测试。</p>
+                </div>
+                <div class="timeline-item">
+                    <span class="date">2026-07-02</span>
+                    <h4 data-key="update2-title">⚡ 执行器推荐更新</h4>
+                    <p data-key="update2-desc">新增 Fluxus 轻量执行器，优化推荐列表，提升兼容性。</p>
+                </div>
+                <div class="timeline-item">
+                    <span class="date">2026-06-28</span>
+                    <h4 data-key="update3-title">📚 网站改版升级</h4>
+                    <p data-key="update3-desc">全新界面设计，更清晰的导航与分类，浏览体验全面提升。</p>
+                </div>
+                <div class="timeline-item">
+                    <span class="date">2026-06-20</span>
+                    <h4 data-key="update4-title">🎉 社区用户突破 6.5 万</h4>
+                    <p data-key="update4-desc">感谢每一位用户的支持，我们将继续提供优质的脚本资源。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FAQ ===== -->
+    <section class="faq-section" id="faq">
+        <div class="container">
+            <div class="section-title">
+                <h2 data-key="faq-title">❓ 常见问题</h2>
+                <p data-key="faq-desc">关于脚本中转站的常见疑问，快速解答。</p>
+            </div>
+
+            <div class="faq-list">
+                <details class="faq-item">
+                    <summary data-key="faq1-q">什么是 Roblox 脚本中转站？</summary>
+                    <div class="faq-answer" data-key="faq1-a">本站是一个专注于收录和推荐优质 Roblox 脚本的资源导航平台，所有脚本均来自社区公开分享，我们仅做整理与展示，不提供任何破解或非法服务。</div>
+                </details>
+                <details class="faq-item">
+                    <summary data-key="faq2-q">如何安全地使用脚本？</summary>
+                    <div class="faq-answer" data-key="faq2-a">建议使用可靠的执行器（如 Synapse X、Krnl），并仅从可信来源获取脚本。避免使用来源不明的脚本，以防账号安全风险。本站所有脚本均经过基础筛选。</div>
+                </details>
+                <details class="faq-item">
+                    <summary data-key="faq3-q">脚本是否完全免费？</summary>
+                    <div class="faq-answer" data-key="faq3-a">是的，本站收录的所有脚本均为免费资源。我们不收取任何费用，也绝不售卖脚本。部分执行器可能需要付费，但脚本本身始终免费。</div>
+                </details>
+                <details class="faq-item">
+                    <summary data-key="faq4-q">支持哪些 Roblox 游戏？</summary>
+                    <div class="faq-answer" data-key="faq4-a">我们的脚本覆盖了大部分热门 Roblox 游戏，包括但不限于：Brookhaven、Adopt Me!、Blox Fruits、Tower Defense Simulator、Pet Simulator X 等。具体支持情况请查看每个脚本的说明。</div>
+                </details>
+                <details class="faq-item">
+                    <summary data-key="faq5-q">如何加入 QQ 群？</summary>
+                    <div class="faq-answer" data-key="faq5-a">点击页面上的「QQ群：1047623664」按钮即可复制群号，在 QQ 中搜索并加入。群内提供脚本交流、问题解答和最新资讯。</div>
+                </details>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== CTA ===== -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-box">
+                <h2 data-key="cta-title">🚀 加入社区，一起探索</h2>
+                <p data-key="cta-desc">获取最新脚本资讯，与数千名 Roblox 玩家交流心得。</p>
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="copyQQ()" style="cursor:pointer;" data-key="cta-btn1">💬 复制 QQ 群号</a>
+                    <a href="#scripts" class="btn btn-secondary" data-key="cta-btn2">📜 浏览脚本</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="logo">🚀 Roblox Script Hub</div>
+                <p data-key="footer-desc">优质 Roblox 脚本中转站，持续更新，为每一位 Roblox 玩家提供安全、稳定的脚本资源导航。</p>
+            </div>
+            <div class="footer-col">
+                <h5 data-key="footer-nav">导航</h5>
+                <a href="#" data-key="footer-home">首页</a>
+                <a href="#scripts" data-key="footer-scripts">脚本库</a>
+                <a href="#executors" data-key="footer-executors">执行器</a>
+                <a href="#guide" data-key="footer-guide">使用指南</a>
+            </div>
+            <div class="footer-col">
+                <h5 data-key="footer-resources">资源</h5>
+                <a href="#" data-key="footer-docs" class="external-link" data-url="#">文档</a>
+                <a href="#" data-key="footer-blog" class="external-link" data-url="#">博客</a>
+                <a href="#" data-key="footer-github" class="external-link" data-url="https://github.com">GitHub</a>
+                <a href="#" data-key="footer-discord" class="external-link" data-url="https://discord.com">Discord</a>
+            </div>
+            <div class="footer-col">
+                <h5 data-key="footer-support">支持</h5>
+                <a href="#faq" data-key="footer-faq">FAQ</a>
+                <a href="#" data-key="footer-contact">联系我们</a>
+                <a href="#" data-key="footer-privacy">隐私政策</a>
+                <a class="copy-btn" onclick="copyQQ()" data-key="footer-qq">QQ群：1047623664</a>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <span data-key="footer-copy">© 2026 Roblox Script Hub. All rights reserved.</span>
+            <div class="social">
+                <a href="#" class="external-link" data-url="https://github.com" aria-label="GitHub">🐙</a>
+                <a href="#" class="external-link" data-url="https://discord.com" aria-label="Discord">💬</a>
+                <a href="#" class="external-link" data-url="https://youtube.com" aria-label="YouTube">▶️</a>
+                <a href="#" class="external-link" data-url="https://twitter.com" aria-label="Twitter">🐦</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ============================================================
+    JAVASCRIPT
+    ============================================================ -->
+    <script>
+        // ============================================================
+        //  1. 动态粒子背景（黑白）
+        // ============================================================
+        (function() {
+            const canvas = document.getElementById('particles-canvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let particles = [];
+            const PARTICLE_COUNT = 120;
+            const CONNECTION_DIST = 150;
+            const MAX_SPEED = 0.6;
+
+            function resize() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * width;
+                    this.y = Math.random() * height;
+                    this.vx = (Math.random() - 0.5) * MAX_SPEED * 2;
+                    this.vy = (Math.random() - 0.5) * MAX_SPEED * 2;
+                    this.radius = 1.5 + Math.random() * 2;
+                    this.opacity = 0.2 + Math.random() * 0.4;
+                }
+
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    if (this.x < 0 || this.x > width) this.vx *= -1;
+                    if (this.y < 0 || this.y > height) this.vy *= -1;
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity * 0.5})`;
+                    ctx.fill();
+                }
+            }
+
+            function initParticles() {
+                particles = [];
+                for (let i = 0; i < PARTICLE_COUNT; i++) {
+                    particles.push(new Particle());
+                }
+            }
+            initParticles();
+
+            function drawLines() {
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < CONNECTION_DIST) {
+                            const alpha = (1 - dist / CONNECTION_DIST) * 0.15;
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+                            ctx.lineWidth = 0.8;
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+                drawLines();
+                requestAnimationFrame(animate);
+            }
+            animate();
+
+            window.addEventListener('resize', () => {
+                resize();
+                particles.forEach(p => {
+                    p.x = Math.min(p.x, width);
+                    p.y = Math.min(p.y, height);
+                });
+            });
+        })();
+
+
+        // ============================================================
+        //  2. 外部链接自动弹出（新窗口打开）
+        // ============================================================
+        document.querySelectorAll('.external-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const url = this.getAttribute('data-url');
+                if (url && url !== '#') {
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                } else {
+                    alert('链接已复制到剪贴板（演示）\n实际项目中请配置 data-url 属性。');
+                }
+            });
+        });
+
+        // ============================================================
+        //  3. 语言切换
+        // ============================================================
+        const langData = {
+            zh: {
+                'nav-home': '首页',
+                'nav-games': '支持的游戏', // 导航标签修改
+                'nav-executors': '执行器',
+                'nav-guide': '指南',
+                'nav-faq': 'FAQ',
+                'hero-badge': '✦ 持续更新 · 社区驱动',
+                'hero-title': 'Roblox 优质脚本中转站',
+                'hero-sub': 'The Best Roblox Script Hub',
+                'hero-desc': '收录高质量 Roblox 脚本、执行器资讯与资源导航，持续更新，为玩家提供稳定可靠的脚本资源。',
+                'hero-btn1': '📜 浏览脚本',
+                'hero-btn2': '💬 QQ群：1047623664',
+                'stat-scripts': '精选脚本',
+                'stat-users': '社区用户',
+                'stat-update': '持续更新',
+                'stat-rating': '用户评分',
+                'scripts-title': '🔥 热门脚本推荐',
+                'scripts-desc': '精选社区最受欢迎、稳定可靠的 Roblox 脚本，持续更新中。',
+                'script1-name': '自动农场',
+                'script1-desc': '全自动收集资源、经验与货币，支持多种主流 Roblox 游戏。',
+                'script2-name': '飞行脚本',
+                'script2-desc': '自由飞行模式，速度可调，支持穿墙与视角锁定，操作丝滑。',
+                'script3-name': '透视 ESP',
+                'script3-desc': '显示玩家、物品和敌人位置，支持自定义颜色与距离过滤。',
+                'script4-name': '自动瞄准',
+                'script4-desc': '智能锁定目标，精准追踪，支持平滑瞄准与自定义灵敏度。',
+                'script5-name': '无限跳跃',
+                'script5-desc': '突破跳跃限制，实现无限连跳，搭配速度调节，移动更灵活。',
+                'script6-name': '速度修改',
+                'script6-desc': '自定义移动速度与跑步速度，支持滑块实时调节，简单易用。',
+                'executors-title': '⚙️ 推荐执行器',
+                'executors-desc': '安全、稳定、高效的 Roblox 执行器，助你流畅运行脚本。',
+                'exec1-desc': '行业标杆，功能强大，兼容性极佳',
+                'exec2-desc': '免费稳定，社区活跃，入门首选',
+                'exec3-desc': '界面优雅，功能全面，体验流畅',
+                'exec4-desc': '轻量快速，资源占用低，稳定运行',
+                'guide-title': '📖 快速上手',
+                'guide-desc': '三步轻松开始你的 Roblox 脚本之旅。',
+                'guide-step1-title': '选择脚本',
+                'guide-step1-desc': '浏览我们的脚本库，找到适合你游戏需求的脚本。',
+                'guide-step2-title': '复制代码',
+                'guide-step2-desc': '一键复制脚本代码，或从 GitHub 获取最新版本。',
+                'guide-step3-title': '注入执行',
+                'guide-step3-desc': '使用推荐执行器注入脚本，享受增强的游戏体验。',
+                'updates-title': '📰 最新动态',
+                'updates-desc': '持续跟进脚本更新与社区资讯。',
+                'update1-title': '🚀 新增 6 款热门脚本',
+                'update1-desc': '自动农场、飞行脚本、透视 ESP 等全新上线，均已通过稳定性测试。',
+                'update2-title': '⚡ 执行器推荐更新',
+                'update2-desc': '新增 Fluxus 轻量执行器，优化推荐列表，提升兼容性。',
+                'update3-title': '📚 网站改版升级',
+                'update3-desc': '全新界面设计，更清晰的导航与分类，浏览体验全面提升。',
+                'update4-title': '🎉 社区用户突破 6.5 万',
+                'update4-desc': '感谢每一位用户的支持，我们将继续提供优质的脚本资源。',
+                'faq-title': '❓ 常见问题',
+                'faq-desc': '关于脚本中转站的常见疑问，快速解答。',
+                'faq1-q': '什么是 Roblox 脚本中转站？',
+                'faq1-a': '本站是一个专注于收录和推荐优质 Roblox 脚本的资源导航平台，所有脚本均来自社区公开分享，我们仅做整理与展示，不提供任何破解或非法服务。',
+                'faq2-q': '如何安全地使用脚本？',
+                'faq2-a': '建议使用可靠的执行器（如 Synapse X、Krnl），并仅从可信来源获取脚本。避免使用来源不明的脚本，以防账号安全风险。本站所有脚本均经过基础筛选。',
+                'faq3-q': '脚本是否完全免费？',
+                'faq3-a': '是的，本站收录的所有脚本均为免费资源。我们不收取任何费用，也绝不售卖脚本。部分执行器可能需要付费，但脚本本身始终免费。',
+                'faq4-q': '支持哪些 Roblox 游戏？',
+                'faq4-a': '我们的脚本覆盖了大部分热门 Roblox 游戏，包括但不限于：Brookhaven、Adopt Me!、Blox Fruits、Tower Defense Simulator、Pet Simulator X 等。具体支持情况请查看每个脚本的说明。',
+                'faq5-q': '如何加入 QQ 群？',
+                'faq5-a': '点击页面上的「QQ群：1047623664」按钮即可复制群号，在 QQ 中搜索并加入。群内提供脚本交流、问题解答和最新资讯。',
+                'cta-title': '🚀 加入社区，一起探索',
+                'cta-desc': '获取最新脚本资讯，与数千名 Roblox 玩家交流心得。',
+                'cta-btn1': '💬 复制 QQ 群号',
+                'cta-btn2': '📜 浏览脚本',
+                'footer-desc': '优质 Roblox 脚本中转站，持续更新，为每一位 Roblox 玩家提供安全、稳定的脚本资源导航。',
+                'footer-nav': '导航',
+                'footer-home': '首页',
+                'footer-scripts': '脚本库',
+                'footer-executors': '执行器',
+                'footer-guide': '使用指南',
+                'footer-resources': '资源',
+                'footer-docs': '文档',
+                'footer-blog': '博客',
+                'footer-github': 'GitHub',
+                'footer-discord': 'Discord',
+                'footer-support': '支持',
+                'footer-faq': 'FAQ',
+                'footer-contact': '联系我们',
+                'footer-privacy': '隐私政策',
+                'footer-qq': 'QQ群：1047623664',
+                'footer-copy': '© 2026 Roblox Script Hub. All rights reserved.',
+            },
+            en: {
+                'nav-home': 'Home',
+                'nav-games': 'Supported Games', // 英文导航也对应修改
+                'nav-executors': 'Executors',
+                'nav-guide': 'Guide',
+                'nav-faq': 'FAQ',
+                'hero-badge': '✦ Always Updated · Community Driven',
+                'hero-title': 'Roblox Script Hub',
+                'hero-sub': 'The Best Roblox Script Hub',
+                'hero-desc': 'Curated high-quality Roblox scripts, executor info & resource navigation. Continuously updated to provide stable and reliable resources for players.',
+                'hero-btn1': '📜 Browse Scripts',
+                'hero-btn2': '💬 QQ Group: 1047623664',
+                'stat-scripts': 'Scripts',
+                'stat-users': 'Users',
+                'stat-update': '24/7 Updates',
+                'stat-rating': 'Rating',
+                'scripts-title': '🔥 Featured Scripts',
+                'scripts-desc': 'Handpicked popular and reliable Roblox scripts from the community, updated regularly.',
+                'script1-name': 'Auto Farm',
+                'script1-desc': 'Fully automated resource, XP & currency farming for multiple Roblox games.',
+                'script2-name': 'Fly Script',
+                'script2-desc': 'Free-flight mode with adjustable speed, noclip & camera lock support.',
+                'script3-name': 'ESP',
+                'script3-desc': 'Reveal players, items & enemies with customizable colors and range filters.',
+                'script4-name': 'Aimbot',
+                'script4-desc': 'Smart target locking with smooth aiming & adjustable sensitivity.',
+                'script5-name': 'Infinite Jump',
+                'script5-desc': 'Break jump limits with infinite consecutive jumps & speed adjustments.',
+                'script6-name': 'Speed Hack',
+                'script6-desc': 'Customize movement & run speed with a real-time slider for easy tuning.',
+                'executors-title': '⚙️ Recommended Executors',
+                'executors-desc': 'Safe, stable & efficient Roblox executors for smooth script execution.',
+                'exec1-desc': 'Industry standard, powerful & widely compatible',
+                'exec2-desc': 'Free, stable & community-driven, perfect for beginners',
+                'exec3-desc': 'Elegant UI, feature-rich & smooth experience',
+                'exec4-desc': 'Lightweight, fast & low resource usage',
+                'guide-title': '📖 Quick Start',
+                'guide-desc': 'Get started with Roblox scripts in three easy steps.',
+                'guide-step1-title': 'Choose a Script',
+                'guide-step1-desc': 'Browse our library and find the script that fits your game.',
+                'guide-step2-title': 'Copy Code',
+                'guide-step2-desc': 'Copy the script code with one click or get the latest from GitHub.',
+                'guide-step3-title': 'Inject & Run',
+                'guide-step3-desc': 'Use a recommended executor to inject and enjoy enhanced gameplay.',
+                'updates-title': '📰 Latest Updates',
+                'updates-desc': 'Stay tuned for script updates and community news.',
+                'update1-title': '🚀 6 New Popular Scripts Added',
+                'update1-desc': 'Auto Farm, Fly Script, ESP and more — all stability tested and ready to use.',
+                'update2-title': '⚡ Executor Recommendations Updated',
+                'update2-desc': 'Added Fluxus lightweight executor, improved compatibility list.',
+                'update3-title': '📚 Website Redesign',
+                'update3-desc': 'Brand new interface with clearer navigation and categories for better browsing.',
+                'update4-title': '🎉 Community Reaches 65K+ Users',
+                'update4-desc': 'Thank you for your support — we\'ll keep bringing you quality script resources.',
+                'faq-title': '❓ FAQ',
+                'faq-desc': 'Quick answers to common questions about the Script Hub.',
+                'faq1-q': 'What is Roblox Script Hub?',
+                'faq1-a': 'This is a resource navigation platform dedicated to curating and recommending high-quality Roblox scripts. All scripts are from community sharing — we only organize and showcase them, without offering any cracked or illegal services.',
+                'faq2-q': 'How to use scripts safely?',
+                'faq2-a': 'We recommend using reliable executors (e.g., Synapse X, Krnl) and only getting scripts from trusted sources. Avoid scripts from unknown origins to protect your account. All scripts on this site go through basic screening.',
+                'faq3-q': 'Are all scripts free?',
+                'faq3-a': 'Yes, all scripts listed here are completely free. We don\'t charge any fees or sell scripts. Some executors may require payment, but the scripts themselves are always free.',
+                'faq4-q': 'Which Roblox games are supported?',
+                'faq4-a': 'Our scripts cover most popular Roblox games, including but not limited to: Brookhaven, Adopt Me!, Blox Fruits, Tower Defense Simulator, Pet Simulator X, and more. Check each script\'s description for details.',
+                'faq5-q': 'How to join the QQ group?',
+                'faq5-a': 'Click the "QQ Group: 1047623664" button on the page to copy the group number, then search and join in QQ. The group offers script discussions, Q&A, and latest updates.',
+                'cta-title': '🚀 Join the Community',
+                'cta-desc': 'Get the latest script news and connect with thousands of Roblox players.',
+                'cta-btn1': '💬 Copy QQ Group',
+                'cta-btn2': '📜 Browse Scripts',
+                'footer-desc': 'Premium Roblox script hub, continuously updated to provide safe, stable script navigation for every Roblox player.',
+                'footer-nav': 'Navigation',
+                'footer-home': 'Home',
+                'footer-scripts': 'Scripts',
+                'footer-executors': 'Executors',
+                'footer-guide': 'Guide',
+                'footer-resources': 'Resources',
+                'footer-docs': 'Docs',
+                'footer-blog': 'Blog',
+                'footer-github': 'GitHub',
+                'footer-discord': 'Discord',
+                'footer-support': 'Support',
+                'footer-faq': 'FAQ',
+                'footer-contact': 'Contact',
+                'footer-privacy': 'Privacy',
+                'footer-qq': 'QQ Group: 1047623664',
+                'footer-copy': '© 2026 Roblox Script Hub. All rights reserved.',
+            }
+        };
+
+        let currentLang = 'zh';
+
+        function toggleLang() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            applyLanguage(currentLang);
+            document.getElementById('langToggle').textContent =
+                currentLang === 'zh' ? '🌐 中文 / EN' : '🌐 EN / 中文';
+        }
+
+        function applyLanguage(lang) {
+            const data = langData[lang];
+            if (!data) return;
+
+            document.querySelectorAll('[data-key]').forEach(el => {
+                const key = el.getAttribute('data-key');
+                if (data[key] !== undefined) {
+                    if (el.tagName === 'SUMMARY') {
+                        el.textContent = data[key];
+                    } else {
+                        el.textContent = data[key];
+                    }
+                }
+            });
+
+            document.querySelectorAll('.faq-answer[data-key]').forEach(el => {
+                const key = el.getAttribute('data-key');
+                if (data[key] !== undefined) {
+                    el.textContent = data[key];
+                }
+            });
+
+            const titleMap = {
+                zh: 'Roblox Script Hub | 优质脚本中转站',
+                en: 'Roblox Script Hub | Premium Script Hub'
+            };
+            document.title = titleMap[lang] || titleMap.zh;
+        }
+
+        applyLanguage('zh');
+
+        // ============================================================
+        //  4. 复制 QQ 群
+        // ============================================================
+        function copyQQ() {
+            const qq = '1047623664';
+            navigator.clipboard.writeText(qq).then(() => {
+                alert('✅ QQ 群号已复制：' + qq);
+            }).catch(() => {
+                const input = document.createElement('input');
+                input.value = qq;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                alert('✅ QQ 群号已复制：' + qq);
+            });
+        }
+
+        // ============================================================
+        //  5. Header 滚动效果
+        // ============================================================
+        const header = document.getElementById('header');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 40) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        // ============================================================
+        //  6. 平滑导航滚动
+        // ============================================================
+        document.querySelectorAll('nav a, .footer-col a[href^="#"]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                const href = this.getAttribute('href');
+                if (href && href.startsWith('#')) {
+                    const target = document.querySelector(href);
+                    if (target) {
+                        e.preventDefault();
+                        const offset = 80;
+                        const top = target.getBoundingClientRect().top + window.pageYOffset - offset;
+                        window.scrollTo({ top, behavior: 'smooth' });
+                    }
+                }
+            });
+        });
+    </script>
+
 </body>
 </html>
